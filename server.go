@@ -17,7 +17,7 @@ type Arith int
 //this function receives encoded xdr, parses it into the pointed interface (args) 
 func (t *Arith) Add(xdrData []byte, reply *int) error {
     var args Args
-	
+
     log.Println("XDR data sent from client",xdrData)
 	// Decode the received XDR data into Args struct
     _, err := xdr.Unmarshal(bytes.NewReader(xdrData), &args)
