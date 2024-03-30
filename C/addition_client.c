@@ -40,7 +40,7 @@ add_prog_1(char *host)
 
 int
 main (int argc, char *argv[])
-{
+{	
 	char *host;
 
 	if (argc < 2) {

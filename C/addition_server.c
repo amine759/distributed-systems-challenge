@@ -16,5 +16,6 @@ add_proc_1_svc(struct ADDITION *argp, struct svc_req *rqstp)
 	 */
 
  	result.result = argp->arg1 + argp->arg2;
+	
 	return &result;
 }
