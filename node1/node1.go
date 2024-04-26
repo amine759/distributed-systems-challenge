@@ -30,7 +30,6 @@ func main() {
 	defer listener.Close()
 
 	fmt.Println("node1 is listening on the master :8080...")
-	
 
 	for {
 		conn, err := listener.Accept()
