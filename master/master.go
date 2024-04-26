@@ -1,71 +1,91 @@
 package main
 
 import (
-	"encoding/gob"
+	"context"
+	"encoding/json"
 	"fmt"
-	"net"
+	"log"
+	"net/http"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Data struct represents the data received from the client
 type Data struct {
-	ID   int
-	Name string
+    ID   int
+    Name string
+    // Add more fields as needed
+}
+type StorageNodes struct {
+    Node1Addr string
+    Node2Addr string
+    Node3Addr string
 }
 
-type FileMetadata struct {
-    Name        string   // Name of the file
-    Size        int64    // Size of the file in bytes
-    Timestamp   string   // Last modified timestamp
+// SendData sends data to a storage node via gRPC
+func (client *StorageNodes) SendData(ctx context.Context, data *Data) error {
+    // TODO: Implement gRPC logic to send data to storage node
+    return nil
+}
+
+// MasterServer represents a master node server
+type MasterServer struct{}
+
+// SendDataHandler handles incoming HTTP POST requests containing data from clients
+func (s *MasterServer) SendDataHandler(w http.ResponseWriter, r *http.Request) {
+    // Decode JSON data from the request body
+    var data Data
+    if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+        http.Error(w, "Failed to decode data", http.StatusBadRequest)
+        return
+    }
+
+    fmt.Fprintln(w, "Data forwarded to storage nodes successfully")
 }
 
 func main() {
-	// Start listening for incoming connections from clients
-	listener, err := net.Listen("tcp", ":8080")
-	if err != nil {
-		fmt.Println("Error listening:", err)
-		return
+    // Initialize gRPC server for storage node communication
+    // TODO: Implement gRPC server logic for storage node communication
+    // Start HTTP server to receive data from clients
+	
+	storageNodes := StorageNodes{
+		Node1Addr: "0.0.0.0:8081",
+		Node2Addr:  "0.0.0.0:8082",
+		Node3Addr: "0.0.0.0:8083",
 	}
-	defer listener.Close()
-
-	fmt.Println("Master node is listening on :8080...")
-
-	// Accept incoming connections indefinitely
-	for {
-		conn, err := listener.Accept()
+	// Establish connections with all storage nodes
+	for i, nodeAddr := range []string{storageNodes.Node1Addr, storageNodes.Node2Addr, storageNodes.Node3Addr} {
+		conn, err := grpc.Dial(nodeAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			fmt.Println("Error accepting connection:", err)
-			continue
+			log.Fatalf("Failed to connect to node %s: %v", nodeAddr, err)
 		}
-		data := &Data{}
-		// Handle incoming connection in a separate goroutine
-		go forwardData(conn, data)
+		defer conn.Close()
+
+		fmt.Printf("gRPC connection established with node %d: %s\n", i+1, nodeAddr)
+
+		// Now you can use 'conn' for gRPC communication with the current node
 	}
+
+	http.HandleFunc("/send", getDataHandler)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-// handleConnection handles an incoming connection
-func forwardData(conn net.Conn, data *Data) {
-	defer conn.Close()
-	storageNodeAddrs := [3]string{":8081", ":8082", ":8083"}
-	// Forward the received data to all storage nodes
-	for _, storageNodeAddr := range storageNodeAddrs {
-		// Connect to the storage node
-		storageConn, err := net.Dial("tcp", storageNodeAddr)
-		if err != nil {
-			fmt.Printf("Error connecting to storage node %s: %v\n", storageNodeAddr, err)
-			continue
-		}
-		defer storageConn.Close()
+func getDataHandler(w http.ResponseWriter, r *http.Request) {
+    // Decode JSON data from the request body
+    var data Data
+    if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+        http.Error(w, "Failed to decode data", http.StatusBadRequest)
+        return
+    }
 
-		// Encode and send the data to the storage node
-		encoder := gob.NewEncoder(storageConn)
-		if err := encoder.Encode(data); err != nil {
-			fmt.Printf("Error encoding and sending data to storage node %s: %v\n", storageNodeAddr, err)
-			continue
-		}
+    // Print the received data
+    fmt.Println("Received data from client:")
+    fmt.Printf("ID: %d\n", data.ID)
+    fmt.Printf("Name: %s\n", data.Name)
+    // Add more fields as needed
 
-		fmt.Printf("Data forwarded to storage node %s\n", storageNodeAddr)
-	}
-
-	fmt.Println("Data forwarded to all storage nodes")
+    // Respond to the client
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintln(w, "Data received successfully")
 }
 

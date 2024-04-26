@@ -1,41 +1,40 @@
 package main
 
 import (
-	"encoding/gob"
-	"fmt"
-	"net"
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "net/http"
 )
 
 // Data struct represents the data to be sent
 type Data struct {
-	ID   int
-	Name string
-	// Add more fields as needed
+    ID   int
+    Name string
+    // Add more fields as needed
 }
 
 func main() {
-	// Connect to the master node
-	conn, err := net.Dial("tcp", "localhost:8080")
-	if err != nil {
-		fmt.Println("Error connecting:", err)
-		return
-	}
-	defer conn.Close()
+    // Data to be sent
+    data := Data{
+        ID:   1,
+        Name: "Example",
+    }
 
-	// Create a new Data instance to send
-	data := Data{
-		ID:   1,
-		Name: "Example Data",
-	}
+    // Convert data to JSON
+    jsonData, err := json.Marshal(data)
+    if err != nil {
+        fmt.Println("Error marshalling data:", err)
+        return
+    }
 
-	// Initialize an encoder to send data over the network
-	encoder := gob.NewEncoder(conn)
+    // Send data via HTTP POST request to the master node
+    resp, err := http.Post("http://localhost:8080/send", "application/json", bytes.NewBuffer(jsonData))
+    if err != nil {
+        fmt.Println("Error sending data to master node:", err)
+        return
+    }
+    defer resp.Body.Close()
 
-	// Send the data
-	if err := encoder.Encode(data); err != nil {
-		fmt.Println("Error encoding data:", err)
-		return
-	}
-
-	fmt.Println("Data sent successfully!")
+    fmt.Println("Data sent successfully to master node")
 }
