@@ -1,0 +1,19 @@
+syntax = "proto3";
+package chat;
+option go_package = "activity/chat";
+
+// first we define our datatypes
+// second our service (object) and the method withing that gets the datatype defined and returns it
+
+message Request {
+    string body = 1;
+}
+
+service ChatService {
+    rpc SayHello(Request) returns (Response) {}
+}
+
+// The response message containing the greetings
+message Response {
+  string message = 1;
+}

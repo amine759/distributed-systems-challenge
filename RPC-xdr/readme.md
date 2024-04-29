@@ -1,4 +1,3 @@
-# Distributed Systems Challenge
 
 This repository contains an example of a simple client-server application implementing remote procedure calls (RPC) in C and Go. The purpose of this project is to demonstrate the basic principles of distributed systems using RPC.
 
