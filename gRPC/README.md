@@ -10,7 +10,7 @@ sudo apt install -y protobuf-compiler
 ```
 to generate grpc code from .proto
 ```bash
-protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative chat/chat.proto
+protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative contract/contract.proto
 ```
 run client and server 
 ```
